@@ -1,0 +1,4 @@
+<% params = opts['params'] %>
+<% parmstr = params.map{ |k,v| "#{k}=#{v}"}.join('&') %>
+:alchemy
+chain --replace --autofree  http://${dhcp-server}/cell/alchemy/boot<%= parmstr.empty? ? "" : "?#{parmstr}" %>

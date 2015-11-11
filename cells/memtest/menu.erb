@@ -1,0 +1,4 @@
+<% params = opts['params'] %>
+<% parmstr = params.map{ |k,v| "#{k}=#{v}"}.join('&') %>
+:memtest86
+chain --replace --autofree  http://${dhcp-server}/cell/memtest/boot<%= parmstr.empty? ? "" : "?#{parmstr}" %>

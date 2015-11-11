@@ -1,0 +1,10 @@
+#!ipxe
+echo Starting alchemy linux ${initiator-iqn}
+set base-url  http://${dhcp-server}
+kernel ${base-url}/alchemy/alchemy.img
+initrd ${base-url}/alchemy/alchemy.ramfs
+imgargs alchemy.img  \
+  ${kernel-opts} \
+  <%= if opts.has_key?('kernel_params') then opts['kernel_params'] else "" end %> \
+  console=tty0 console=ttyS1,115200n8
+boot || shell

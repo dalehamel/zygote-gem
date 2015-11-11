@@ -1,0 +1,26 @@
+#!ipxe
+# Note: there is an issue with loading memtest, as it needs to load very load in memory
+# This is a patched image that will load correctly: http://boot.ipxe.org/memtest.0
+# put it at memtest/memtest.bin on the boot server
+echo Starting memtestx86 ${initiator-iqn}
+set base-url  http://${dhcp-server}
+chain ${base-url}/memtest/memtest.bin  <%= if opts.has_key?('kernel_params') then opts['kernel_params'] else "" end %> || goto failed
+
+
+# To do: add automated checking as per below
+#:memtest-ipxe
+#set base-url  http://${dhcp-server}
+#chain ${base-url}/memtest passes=1 && set memtest GOOD || set memtest BAD
+#set memtest_errno:uint8 ${errno}
+#iseq ${memtest} GOOD && goto memtest-info ||
+#iseq ${memtest_errno} 0x1 && set memtest BAD || set memtest UNKNOWN
+#
+#:memtest-info
+#menu Your memory seems to be ${memtest}
+#item memtest-report   Report memtest result to web service
+#item --key 0x08 menu-diag Back to diagnostics menu...
+#choose --default menu-diag selected && goto ${selected} || goto start
+# 
+#:memtest-report
+#chain ${memtest-report-url}?result=${memtest}&mac=${mac}&uuid=${uuid}&hostname=${hostname} ||
+#goto menu-diag

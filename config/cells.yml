@@ -1,0 +1,16 @@
+index:
+  timeout: 10
+  cells:
+    alchemy:
+      menu:
+        class: util
+        label: "Boot Alchemy Linux"
+      args:
+        kernel_params: net real_init=/sbin/init
+    memtest:
+      menu:
+        class: util
+        label:   "Run Memtest86"
+      args:
+        kernel_params: console=tty0 console=ttyS1,115200n8
+        passes: 5

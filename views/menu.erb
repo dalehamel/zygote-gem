@@ -1,0 +1,101 @@
+#!ipxe
+
+# This template is shamelessly ripped off from https://gist.github.com/robinsmidsrod/2234639
+# The most notable change is that we are of course dynamically generating the menu using spells.
+
+<% index = opts['index'] %>
+<% params = opts['params'] %>
+<% cells = index['cells'] %>
+
+# Some menu defaults
+set menu-timeout <%= index['timeout'] %>
+set submenu-timeout ${menu-timeout}
+
+# Allow overriding the menu default for automation
+<% if opts.has_key? 'menu_default' %>
+set menu-default  <%= opts['menu_default']  %>
+<% elsif opts.has_key? 'menu' and opts['menu'].has_key? 'menu_default' %>
+set menu-default  <%= opts['menu']['menu_default']  %>
+<% end %>
+
+<% if opts.has_key? 'submenu_default' %>
+set submenu-default <%= opts['submenu_default'] %>
+<% elsif opts.has_key? 'menu' and opts['menu'].has_key? 'submenu_default' %>
+set submenu-default <%= opts['menu']['submenu_default'] %>
+<% end %>
+
+isset ${menu-default} || set menu-default exit
+
+# Figure out if client is 64-bit capable
+cpuid --ext 29 && set arch x64 || set arch x86
+cpuid --ext 29 && set archl amd64 || set archl i386
+
+###################### MAIN MENU ####################################
+
+
+# This menu should be dynamically generated from spells, probably just make a metadata format
+
+:start
+menu iPXE boot menu for <%= params['sku'] || 'unknown' %> from <%= params['ip'] || 'unknown' %>
+<% os_entries = cells.select{ |_,d| d['menu']['class'] == 'os'} %>
+<% util_entries = cells.select{ |_,d| d['menu']['class'] == 'util'} %>
+item --gap --             ------------------------- OS Installation --------------------------------
+<% os_entries.each do | cell, data |  %>
+  <% menu = data['menu'] %>
+item --key <%= cell[0] %> <%= cell %> <%= menu['label'] %>
+<% end %>
+item --gap --             ------------------------- Tools and utilities ----------------------------
+<% util_entries.each do | cell, data |  %>
+  <% menu = data['menu'] %>
+item --key <%= cell[0] %> <%= cell %> <%= menu['label'] %>
+<% end %>
+item --gap --             ------------------------- Advanced opts -------------------------------
+item --key c config       Configure settings
+item shell                Drop to iPXE shell
+item reboot               Reboot computer
+item
+item --key x exit         Exit iPXE and continue BIOS boot
+choose --timeout ${menu-timeout} --default ${menu-default} selected || goto cancel
+set menu-timeout 0
+goto ${selected}
+
+# Generated menu entries for each cell
+<% cells.each do | cell, _ |  %>
+<%= partial("#{cell}/menu".to_sym, :opts => opts) %>
+<% end %>
+
+:cancel
+echo You cancelled the menu, dropping you to a shell
+
+:shell
+echo Type 'exit' to get the back to the menu
+shell
+set menu-timeout 0
+set submenu-timeout 0
+goto start
+
+:failed
+echo Booting failed, dropping to shell
+goto shell
+
+:reboot
+reboot
+
+:exit
+# On dell servers exit causes a PXE boot loop.
+# This tells the server to boot from first drive instead
+# http://ipxe.org/cmd/sanboot
+# http://ipxe.org/appnote/work_around_bios_halting_on_ipxe_exit
+
+sanboot --no-describe --drive 0x80
+#exit
+
+:config
+config
+goto start
+
+:back
+set submenu-timeout 0
+clear submenu-default
+goto start
+

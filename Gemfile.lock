@@ -1,12 +1,3 @@
-PATH
-  remote: ../GenesisReactor
-  specs:
-    genesisreactor (0.0.0)
-      async_sinatra (= 1.1.0)
-      em-synchrony (= 1.0.4)
-      snmp (= 1.2.0)
-      thin (= 1.6.3)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -17,6 +8,11 @@ GEM
     em-synchrony (1.0.4)
       eventmachine (>= 1.0.0.beta.1)
     eventmachine (1.0.8)
+    genesisreactor (0.0.1)
+      async_sinatra (= 1.1.0)
+      em-synchrony (= 1.0.4)
+      snmp (= 1.2.0)
+      thin (= 1.6.3)
     rack (1.6.4)
     rack-protection (1.5.3)
       rack
@@ -35,7 +31,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  genesisreactor!
+  genesisreactor (~> 0.0.1)
 
 BUNDLED WITH
    1.10.6

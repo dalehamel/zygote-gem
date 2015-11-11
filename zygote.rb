@@ -37,7 +37,7 @@ end
 genesis = Genesis::Reactor.new(
   threads: 1000,
   protocols: {
-    Http::Protocol => 8080,
+    Http::Protocol => 7000,
   },
   handlers: [ ZygoteWeb ],
   views: [ File.join(Dir.pwd, 'views'), File.join(Dir.pwd, 'cells') ],

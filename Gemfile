@@ -1,3 +1,3 @@
 source 'https://rubygems.org'
 
-gem 'genesisreactor', :path => '../GenesisReactor'
+gem 'genesisreactor', "~> 0.0.1"

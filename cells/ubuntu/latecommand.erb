@@ -1,0 +1,37 @@
+#!/bin/bash -xe
+<%
+params = opts['params']
+paramstr = params.map{ |k,v| "#{k}=#{v}"}.join('&')
+args = opts['args']
+%>
+
+# Disable quickboot because ubuntu 14.04 breaks unattended startup on LVM installs:
+# https://bugs.launchpad.net/ubuntu/+source/grub2/+bug/1274320
+sed -i 's/^\(quick_boot=\)"1"/\1"0"/g' /etc/grub.d/10_linux
+
+# Force oldschool ethX naming on ubuntu 14.04
+sed -i 's/^\(GRUB_CMDLINE_LINUX_DEFAULT=\)"\(.*\)"/\1"\2 net.ifnames=1 biosdevname=0"/g' /etc/default/grub
+update-grub
+
+# We then have to update apt in order to use ubuntu's servers
+# Fix debs to point to ubuntu, since it's probably pointed at bootserver
+
+echo "deb http://archive.ubuntu.com/ubuntu/ trusty main universe multiverse" > /etc/apt/sources.list
+echo "deb http://archive.ubuntu.com/ubuntu/ trusty-updates main universe multiverse" >>  /etc/apt/sources.list
+echo "deb http://archive.canonical.com/ubuntu trusty partner" >>  /etc/apt/sources.list
+echo "deb http://security.ubuntu.com/ubuntu trusty-security main universe multiverse"  >>  /etc/apt/sources.list
+apt-get -qq update;
+
+# Then we add a callback to rc local so that we know when the server has booted.
+# echo "curl -X POST 'http://<%= params['dhcp-server'] %>/spell/notify?sku=<%=params['sku']%>&message=osloaded'" > /etc/rc.local #FIXME for boot callback
+
+# Set up authorized key for console user
+[ ! -e /home/<%= args['user']['name'] %>/.ssh/ ] && mkdir /home/<%= args['user']['name'] %>/.ssh
+chown -R <%= args['user']['name'] %> /home/<%= args['user']['name'] %>/.ssh
+chmod 0700 /home/<%= args['user']['name'] %>/.ssh
+wget http://<%= params['dhcp-server'] %>/cells/ubuntu/authkeys?sku=<%= params['sku'] %> -O /home/<%= args['user']['name'] %>/.ssh/authorized_keys ## FIXME
+
+# We want the console user to be able to do passwordless sudo for automation purposes
+echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+exit 0

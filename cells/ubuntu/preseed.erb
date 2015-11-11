@@ -1,0 +1,249 @@
+<%
+params = opts['params']
+paramstr = params.map{ |k,v| "#{k}=#{v}"}.join('&')
+args = opts['args']
+%>
+
+### Localization
+
+# Preseeding only locale sets language, country and locale.
+d-i debian-installer/locale string en_US.UTF-8
+
+### Keyboard selection.
+
+# Disable automatic (interactive) keymap detection.
+d-i console-setup/ask_detect boolean false
+d-i keyboard-configuration/layoutcode string us
+
+### Network configuration
+# Try to make DHCP less cranky by retrying
+d-i netcfg/dhcp_options select Retry network autoconfiguration
+
+
+# Can do some early setup, and even dynamically set debconf!
+# https://help.ubuntu.com/10.04/installation-guide/i386/preseed-advanced.html
+# Note that this example doesn't work, because preseed needs network already selected :(
+# To do: have this call back to transmuter to indicate that the install has started
+# d-i preseed/early_command string debconf-set netcfg/choose_interface "$(ip route show  | grep default | cut -d ' ' -f 5)"
+
+# Keyboard selection
+d-i keyboard-configuration/layoutcode string us
+d-i keyboard-configuration/variantcode string
+
+# Controls whether or not the hardware clock is set to UTC
+d-i clock-setup/utc boolean true
+# You may set this to any valid setting for $TZ; see the contents of
+# /usr/share/zoneinfo/ for valid values
+d-i time/zone string UTC
+# Controls whether to use NTP to set the clock during the install
+d-i clock-setup/ntp boolean true
+# d-i clock-setup/ntp-server string <%= params['ntp_server'] %> # FIXME
+
+# Account setup
+d-i passwd/root-login boolean false
+d-i passwd/user-fullname string Console User
+d-i passwd/username string <%= args['user']['name'] %>
+d-i passwd/user-password-crypted password <%= args['user']['hash'] %>
+d-i user-setup/encrypt-home boolean false
+
+
+# If you select ftp, the mirror/country string does not need to be set
+# Location: http://boot.smidsrod.lan/ubuntu-12.04-server-amd64/
+d-i mirror/country string manual
+d-i mirror/http/proxy string
+
+
+### Partitioning
+
+# Forcefully nuke from orbit any existing LVM setup, since ubuntu can't properly destroy existing multi-disk LVM installs
+# Heck, lets zero out the first GB while we're at it. That should get rid of those pesky partition tables
+# https://help.ubuntu.com/10.04/installation-guide/i386/preseed-advanced.html
+d-i partman/early_command string \
+  for root in $(vgdisplay | grep "VG Name" | tr -s " " : | cut -d : -f 4); do vgremove -f $root; done; \
+  for device in $(pvdisplay | grep "PV Name" | tr -s " " : | cut -d : -f 4); do pvremove -f -f -y $device; done;
+
+<% if params['raid'] == 'hwraid' %>
+d-i partman-auto/disk string /dev/sda
+d-i partman-auto/method string lvm
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-md/device_remove_md                   boolean true
+d-i partman-auto/purge_lvm_from_device  boolean true
+d-i partman-auto-lvm/guided_size string max
+d-i partman-auto-lvm/new_vg_name string lvroot
+
+d-i partman-auto/choose_recipe select lvroot
+
+d-i partman-auto/expert_recipe string                       \
+  lvroot ::                                                  \
+    40000 40000 40000 <%= args['preseed']['storagefs'] %>    \
+      $lvmok{ }                                              \
+      $primary{ } $bootable{ }                               \
+      method{ format } format{ }                             \
+      use_filesystem{ } filesystem{ <%= args['preseed']['storagefs'] %> }                   \
+      mountpoint{ / }                                        \
+    .                                                        \
+    30000 300000 3000000 <%= args['preseed']['storagefs'] %> \
+      $lvmok{ }                                              \
+      method{ format } format{ }                             \
+      use_filesystem{ } filesystem{ <%= args['preseed']['storagefs'] %> }\
+      mountpoint{ /u }                                       \
+    .                                                        \
+    <%= args['preseed']['swapsize'] %>  <%= args['preseed']['swapsize'] %> <%= args['preseed']['swapsize'] %> linux-swap  \
+      $lvmok{ }                                              \
+      method{ swap } format{ }                               \
+    .
+
+d-i partman-auto-lvm/no_boot boolean true
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman-lvm/confirm boolean true
+d-i partman-lvm/confirm_nooverwrite boolean true
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+<% elsif params['raid'] == 'raid5' %>
+d-i     partman-auto/disk string /dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
+d-i     partman-auto/method                           string raid
+d-i     partman-lvm/device_remove_lvm                 boolean true
+d-i     partman-md/device_remove_md                   boolean true
+d-i     partman-auto/purge_lvm_from_device  boolean true
+d-i     partman-lvm/confirm                           boolean true
+d-i     partman-auto/choose_recipe select boot-root
+d-i     partman-auto-lvm/new_vg_name                  string lvroot
+d-i     partman-auto-lvm/guided_size                  string 100%
+d-i     partman-auto/expert_recipe string \
+            80000 30 100000000 raid \
+            $lvmignore{ } \
+            $primary{ } method{ raid } \
+            . \
+             40000 40000 40000 <%= args['preseed']['storagefs'] %>    \
+               $defaultignore{ } \
+               $lvmok{ }                                              \
+                $primary{ } $bootable{ }                               \
+                method{ format } format{ }                             \
+                use_filesystem{ } filesystem{ <%= args['preseed']['storagefs'] %> }                   \
+                mountpoint{ / }                                        \
+             .                                                        \
+             30000 300000 30000000 <%= args['preseed']['storagefs'] %>\
+               $defaultignore{ } \
+               $lvmok{ }                                              \
+               method{ format } format{ }                             \
+               use_filesystem{ } filesystem{ <%= args['preseed']['storagefs'] %> } \
+               mountpoint{ /u }                                       \
+             . \
+            <%= args['preseed']['swapsize'] %>  <%= args['preseed']['swapsize'] %> <%= args['preseed']['swapsize'] %> linux-swap  \
+               $defaultignore{ } \
+               $lvmok{ }                                              \
+               method{ swap } format{ }                               \
+             .
+
+d-i     partman-auto-raid/recipe string \
+        5 6 0 lvm - \
+        /dev/sda1#/dev/sdb1#/dev/sdc1#/dev/sdd1#/dev/sde1#/dev/sdf1                             \
+        .
+
+d-i     mdadm/boot_degraded boolean true
+d-i     partman-md/confirm boolean true
+d-i     partman-partitioning/confirm_write_new_label  boolean true
+d-i     partman/choose_partition select Finish partitioning and write changes to disk
+d-i     partman/confirm boolean true
+d-i     partman-md/confirm_nooverwrite  boolean true
+d-i     partman/confirm_nooverwrite boolean true
+d-i     grub-installer/bootdev string /dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
+
+# RAID1 by default
+<% else %>
+d-i     partman-auto/disk string /dev/sda /dev/sdb
+d-i     partman-auto/method                           string raid
+d-i     partman-lvm/device_remove_lvm                 boolean true
+d-i     partman-md/device_remove_md                   boolean true
+d-i     partman-auto/purge_lvm_from_device  boolean true
+d-i     partman-lvm/confirm                           boolean true
+d-i     partman-auto/choose_recipe select boot-root
+d-i     partman-auto-lvm/new_vg_name                  string lvroot
+d-i     partman-auto-lvm/guided_size                  string 90%
+d-i     partman-auto/expert_recipe string \
+           boot-root :: \
+             1024 20 1024 raid                   \
+                $lvmignore{ }                    \
+                $primary{ } method{ raid }       \
+             .                                   \
+            80000 30 100000000 raid \
+            $lvmignore{ } \
+            $primary{ } method{ raid } \
+            . \
+             40000 40000 40000 <%= args['preseed']['storagefs'] %>   \
+               $defaultignore{ } \
+               $lvmok{ }                                              \
+                $primary{ } $bootable{ }                               \
+                method{ format } format{ }                             \
+                use_filesystem{ } filesystem{ <%= args['preseed']['storagefs'] %> }                   \
+                mountpoint{ / }                                        \
+             .                                                        \
+             30000 300000 3000000 <%= args['preseed']['storagefs'] %> \
+               $defaultignore{ } \
+               $lvmok{ }                                              \
+               method{ format } format{ }                             \
+               use_filesystem{ } filesystem{ <%= args['preseed']['storagefs'] %>  } \
+               mountpoint{ /u }                                       \
+             . \
+
+              <%= args['preseed']['swapsize'] %>  <%= args['preseed']['swapsize'] %> <%= args['preseed']['swapsize'] %> linux-swap  \
+               $defaultignore{ } \
+               $lvmok{ }                                              \
+               method{ swap } format{ }                               \
+             .
+
+d-i     partman-auto-raid/recipe string \
+        1 2 0 ext3 /boot                \
+        /dev/sda1#/dev/sdb1                             \
+        .                               \
+        1 2 0 lvm - \
+        /dev/sda2#/dev/sdb2                             \
+        .
+
+d-i     mdadm/boot_degraded boolean true
+d-i     partman-md/confirm boolean true
+d-i     partman-partitioning/confirm_write_new_label  boolean true
+d-i     partman/choose_partition select Finish partitioning and write changes to disk
+d-i     partman/confirm boolean true
+d-i     partman-md/confirm_nooverwrite  boolean true
+d-i     partman/confirm_nooverwrite boolean true
+<% end %>
+
+
+## Controlling how partitions are mounted
+
+d-i partman/mount_style select uuid
+
+# Package selection
+
+### Apt setup
+d-i apt-setup/universe boolean true
+
+### Package selection
+#tasksel tasksel/first multiselect ubuntu-server openssh-server # looks like this does fuck all in 12.04
+tasksel tasksel/first multiselect Basic Ubuntu server, OpenSSH server
+
+d-i pkgsel/include string openssh-server
+d-i pkgsel/upgrade select none
+
+d-i pkgsel/update-policy select none
+
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/with_other_os boolean true
+
+### Finishing up the installation
+d-i finish-install/reboot_in_progress note
+
+### X configuration
+xserver-xorg xserver-xorg/autodetect_monitor boolean false
+
+### Late command
+# We'll hand off to the transmuter to decide what to do now that the install is finished.
+# Basically just fetch the script from the bootserver, then boot it.
+d-i preseed/late_command string \
+  mount --rbind /dev /target/dev; \
+  mount --rbind /sys /target/sys; \
+  in-target wget 'http://<%= params['dhcp-server'] %>/cell/ubuntu/latecommand?dhcp-server=${dhcp-server}<%= paramstr.empty? ? "" : "&#{paramstr}" %>' -O /tmp/latecommand.sh; \
+  in-target chmod +x /tmp/latecommand.sh; \
+  in-target /tmp/latecommand.sh;

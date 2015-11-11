@@ -1,6 +1,32 @@
 index:
   timeout: 10
   cells:
+    ubuntu:
+      menu:
+        class: os
+        label: "Select preseeds for ubuntu installer..."
+        submenu:
+          automatic:
+            label: "Automatic, default(raid1)"
+            params:
+              raid: raid1
+            args:
+              kernel_params: console=tty0 console=ttyS1,115200n8 DEBCONF_DEBUG=5
+          manual:
+            label: "Manual install"
+            params:
+              manual: true
+            args:
+              kernel_params: console=tty0 console=ttyS1,115200n8 DEBCONF_DEBUG=5
+      args:
+        user:
+          name: console
+          hash: HASH
+          keys:
+            - foo
+        preseed:
+          swapsize: 4000
+          storagefs: ext4
     alchemy:
       menu:
         class: util

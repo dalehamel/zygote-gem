@@ -1,0 +1,35 @@
+#!ipxe
+<%
+params = opts['params']
+paramstr = params.map{ |k,v| "#{k}=#{v}"}.join('&')
+entry = params['entry']
+entrydata = opts['menu']['submenu'][entry]
+args = opts['menu']['submenu'][entry]['args']
+%>
+
+echo Starting Ubuntu 14.04 <% entry['label'] %> installer for ${initiator-iqn}
+set base-url http://${dhcp-server}/ubuntu/trusty
+kernel ${base-url}/install/netboot/ubuntu-installer/${archl}/linux
+initrd ${base-url}/install/netboot/ubuntu-installer/${archl}/initrd.gz
+# Note: https://bugs.launchpad.net/ubuntu/+source/netcfg/+bug/56679 fixes bug with auto selecting interfaces
+imgargs linux \
+  debian-installer/locale=en_US.utf8 \
+  console-setup/ask_detect=false \
+  keyboard-configuration/layoutcode=us \
+  live-installer/net-image=${base-url}/install/filesystem.squashfs \
+  netcfg/dhcp_timeout=120 \
+  net.ifnames=1 biosdevname=0 \
+  console=tty0 console=ttyS1,115200n8 \
+  <% unless params['manual'] %> \
+  url=http://${dhcp-server}/cell/ubuntu/preseed?dhcp-server=${dhcp-server}<%= paramstr.empty? ? "" : "&#{paramstr}" %> \
+  netcfg/get_hostname=<%= params['sku'] || 'unknown-sku' %> \ #FIXME: manually compute here if possible
+  netcfg/choose_interface=auto \
+  BOOTIF=<%= params['mac'] %> \
+  mirror/http/hostname=${dhcp-server} mirror/http/directory=/ubuntu/trusty \
+    <% if args %> \
+  <%= (args['preseed_opts'] || {}).map{|k,v| "#{k}=#{v}"}.join(' ') %>  \
+  <%= args['kernel_params'] %>
+    <% end %>
+  <% end %>
+boot || goto failed
+goto start

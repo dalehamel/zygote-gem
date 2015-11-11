@@ -64,6 +64,37 @@ goto ${selected}
 <%= partial("#{cell}/menu".to_sym, :opts => opts) %>
 <% end %>
 
+# Render any submenus
+<% submenus = cells.select{ |_,d| d['menu']['submenu'] } %>
+<% submenus.each do |cell, data| %>
+
+# Create the main submenu entry to render the submenu
+:submenu-<%= cell %>
+menu <%= data['menu']['label'] %>
+
+# Add each entry to the submenu
+  <% data['menu']['submenu'].each do |entry, data| %>
+item  <%= cell %>-<%= entry %> <%= data['label'] %>
+  <% end %>
+
+# Toss in the boilerplate footer
+item
+item --key 0x08 back      Back to top menu...
+choose --timeout ${submenu-timeout} --default ${submenu-default} selected || goto start
+set submenu-timeout 0
+goto ${selected}
+
+# Now generate the boot entries for each submenu label
+  <% data['menu']['submenu'].each do |entry, data| %>
+    <% local_params = (data['params'] || {}).merge(params) %>
+    <% parmstr = {entry: entry}.merge(local_params).map{ |k,v| "#{k}=#{v}"}.join('&') %>
+:<%= cell %>-<%= entry %>
+chain --replace --autofree  http://${dhcp-server}/cell/<%= cell %>/boot<%= parmstr.empty? ? "" : "?#{parmstr}" %>
+  <% end %>
+<% end %>
+
+##########################################
+
 :cancel
 echo You cancelled the menu, dropping you to a shell
 

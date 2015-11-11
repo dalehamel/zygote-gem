@@ -1,6 +1,7 @@
+require 'yaml'
 require 'genesisreactor'
 require 'genesis/protocol/http'
-require 'yaml'
+require_relative 'lib/util'
 
 include Genesis
 
@@ -15,16 +16,20 @@ class ZygoteWeb < Http::Handler
   end
 
   get '/chain' do
-    #@channel << 'test'
+    params = clean_params(params || {})
+    ip = request.ip == "127.0.0.1" ? @env['HTTP_X_FORWARDED_FOR'] : request.ip
+    params['ip'] = ip
+    params['sku'] = compute_sku(params['manufacturer'], params['serial'], params['board-serial'])
+    @channel << params
     body {erb :menu, locals: { opts: CELL_CONFIG.merge('params' => params || {}) } }
   end
 
   get %r{/cell/(?<cell>\w*)/(?<action>\w*)} do
     cell = params['cell']
     cell_opts = CELL_CONFIG['index']['cells'][cell]
-    params.delete_if { |x,_| x == 'splat' || x == 'captures' }
+    params = clean_params(params)
     opts = cell_opts.merge('params' => params || {})
-    @channel << opts
+    @channel << opts # for debugging
     body {erb :"#{cell}/#{params['action']}".to_sym, locals: { opts: opts } }
   end
 

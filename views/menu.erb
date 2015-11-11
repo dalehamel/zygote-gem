@@ -42,7 +42,7 @@ menu iPXE boot menu for <%= params['sku'] || 'unknown' %> from <%= params['ip'] 
 item --gap --             ------------------------- OS Installation --------------------------------
 <% os_entries.each do | cell, data |  %>
   <% menu = data['menu'] %>
-item --key <%= cell[0] %> <%= cell %> <%= menu['label'] %>
+item --key <%= cell[0] %> <%= menu['submenu'] ? "submenu-#{cell}" : cell %> <%= menu['label'] %>
 <% end %>
 item --gap --             ------------------------- Tools and utilities ----------------------------
 <% util_entries.each do | cell, data |  %>

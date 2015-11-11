@@ -241,9 +241,9 @@ xserver-xorg xserver-xorg/autodetect_monitor boolean false
 ### Late command
 # We'll hand off to the transmuter to decide what to do now that the install is finished.
 # Basically just fetch the script from the bootserver, then boot it.
-d-i preseed/late_command string \
-  mount --rbind /dev /target/dev; \
-  mount --rbind /sys /target/sys; \
-  in-target wget 'http://<%= params['dhcp-server'] %>/cell/ubuntu/latecommand?dhcp-server=${dhcp-server}<%= paramstr.empty? ? "" : "&#{paramstr}" %>' -O /tmp/latecommand.sh; \
-  in-target chmod +x /tmp/latecommand.sh; \
-  in-target /tmp/latecommand.sh;
+#d-i preseed/late_command string \
+#  mount --rbind /dev /target/dev; \
+#  mount --rbind /sys /target/sys; \
+#  in-target wget 'http://<%= params['dhcp-server'] %>/cell/ubuntu/latecommand?dhcp-server=${dhcp-server}<%= paramstr.empty? ? "" : "&#{paramstr}" %>' -O /tmp/latecommand.sh; \
+#  in-target chmod +x /tmp/latecommand.sh; \
+#  in-target /tmp/latecommand.sh;

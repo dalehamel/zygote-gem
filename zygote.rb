@@ -20,17 +20,17 @@ class ZygoteWeb < Http::Handler
   end
 
   get %r{/cell/(?<cell>\w*)/(?<action>\w*)} do
-    #@channel << 'test'
     cell = params['cell']
     cell_opts = CELL_CONFIG['index']['cells'][cell]
     params.delete_if { |x,_| x == 'splat' || x == 'captures' }
     opts = cell_opts.merge('params' => params || {})
+    @channel << opts
     body {erb :"#{cell}/#{params['action']}".to_sym, locals: { opts: opts } }
   end
 
-#  subscribe do |args|
-#    puts args
-#  end
+  subscribe do |args|
+    puts args
+  end
 
 end
 

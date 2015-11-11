@@ -22,7 +22,7 @@ imgargs linux \
   console=tty0 console=ttyS1,115200n8 \
   <% unless params['manual'] %> \
   url=http://${dhcp-server}/cell/ubuntu/preseed?dhcp-server=${dhcp-server}<%= paramstr.empty? ? "" : "&#{paramstr}" %> \
-  netcfg/get_hostname=<%= params['sku'] || 'unknown-sku' %> \ #FIXME: manually compute here if possible
+  netcfg/get_hostname=<%= params['sku'] || 'unknown-sku' %> \
   netcfg/choose_interface=auto \
   BOOTIF=<%= params['mac'] %> \
   mirror/http/hostname=${dhcp-server} mirror/http/directory=/ubuntu/trusty \

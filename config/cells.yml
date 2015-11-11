@@ -21,7 +21,7 @@ index:
       args:
         user:
           name: console
-          hash: HASH
+          hash: "$6$7EYCq7Ft$FOPhIAY4EdVKXenxnt6zeyuSw1WANAz7UehTnCVsH3wP8m8S7qAavFn7j7ef6oVcqyrY0GcnllVJXeuB3MnQS."
           keys:
             - foo
         preseed:

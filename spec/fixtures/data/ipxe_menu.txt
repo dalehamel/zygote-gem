@@ -3,26 +3,13 @@
 # This template is shamelessly ripped off from https://gist.github.com/robinsmidsrod/2234639
 # The most notable change is that we are of course dynamically generating the menu using cells.
 
-<% index = opts['index'] %>
-<% params = opts['params'] %>
-<% cells = index['cells'] %>
 
 # Some menu defaults
-set menu-timeout <%= index['timeout'] %>
+set menu-timeout 10
 set submenu-timeout ${menu-timeout}
 
 # Allow overriding the menu default for automation
-<% if opts.has_key? 'menu_default' %>
-set menu-default  <%= opts['menu_default']  %>
-<% elsif opts.has_key? 'menu' and opts['menu'].has_key? 'menu_default' %>
-set menu-default  <%= opts['menu']['menu_default']  %>
-<% end %>
 
-<% if opts.has_key? 'submenu_default' %>
-set submenu-default <%= opts['submenu_default'] %>
-<% elsif opts.has_key? 'menu' and opts['menu'].has_key? 'submenu_default' %>
-set submenu-default <%= opts['menu']['submenu_default'] %>
-<% end %>
 
 isset ${menu-default} || set menu-default exit
 
@@ -36,19 +23,15 @@ cpuid --ext 29 && set archl amd64 || set archl i386
 # This menu should be dynamically generated from cells, probably just make a metadata format
 
 :start
-menu iPXE boot menu for <%= params['sku'] || 'unknown' %> from <%= params['ip'] || 'unknown' %>
-<% os_entries = cells.select{ |_,d| d['menu']['class'] == 'os'} %>
-<% util_entries = cells.select{ |_,d| d['menu']['class'] == 'util'} %>
+menu iPXE boot menu for SPM-ZM143S050147 from unknown
 item --gap --             ------------------------- OS Installation --------------------------------
-<% os_entries.each do | cell, data |  %>
-  <% menu = data['menu'] %>
-item --key <%= cell[0] %> <%= menu['submenu'] ? "submenu-#{cell}" : cell %> <%= menu['label'] %>
-<% end %>
+  
+item --key u submenu-ubuntu Select preseeds for ubuntu installer...
 item --gap --             ------------------------- Tools and utilities ----------------------------
-<% util_entries.each do | cell, data |  %>
-  <% menu = data['menu'] %>
-item --key <%= cell[0] %> <%= cell %> <%= menu['label'] %>
-<% end %>
+  
+item --key a alchemy Boot Alchemy Linux
+  
+item --key m memtest Run Memtest86
 item --gap --             ------------------------- Advanced opts -------------------------------
 item --key c config       Configure settings
 item shell                Drop to iPXE shell
@@ -60,22 +43,23 @@ set menu-timeout 0
 goto ${selected}
 
 # Generated menu entries for each cell
-<% cells.each do | cell, _ |  %>
-<%= partial("#{cell}/menu".to_sym, :opts => opts) %>
-<% end %>
+:alchemy
+chain --replace --autofree  http://${dhcp-server}/cell/alchemy/boot?dhcp-server=172.16.2.4?&mac=0c:c4:7a:05:77:1a&serial=S15500224715585&product=SYS-2027PR-HTTR&manufacturer=Supermicro&board-serial=ZM143S050147&board-product=X9DRT-PT&ip=unknown&sku=SPM-ZM143S050147
+:memtest86
+chain --replace --autofree  http://${dhcp-server}/cell/memtest/boot?dhcp-server=172.16.2.4?&mac=0c:c4:7a:05:77:1a&serial=S15500224715585&product=SYS-2027PR-HTTR&manufacturer=Supermicro&board-serial=ZM143S050147&board-product=X9DRT-PT&ip=unknown&sku=SPM-ZM143S050147
 
 # Render any submenus
-<% submenus = cells.select{ |_,d| d['menu']['submenu'] } %>
-<% submenus.each do |cell, data| %>
 
 # Create the main submenu entry to render the submenu
-:submenu-<%= cell %>
-menu <%= data['menu']['label'] %>
+:submenu-ubuntu
+menu Select preseeds for ubuntu installer...
 
 # Add each entry to the submenu
-  <% data['menu']['submenu'].each do |entry, data| %>
-item  <%= cell %>-<%= entry %> <%= data['label'] %>
-  <% end %>
+  
+item  ubuntu-automatic Automatic, default(raid1)
+  
+item  ubuntu-manual Manual install
+  
 
 # Toss in the boilerplate footer
 item
@@ -85,13 +69,17 @@ set submenu-timeout 0
 goto ${selected}
 
 # Now generate the boot entries for each submenu label
-  <% data['menu']['submenu'].each do |entry, data| %>
-    <% local_params = (data['params'] || {}).merge(params) %>
-    <% parmstr = {entry: entry}.merge(local_params).map{ |k,v| "#{k}=#{v}"}.join('&') %>
-:<%= cell %>-<%= entry %>
-chain --replace --autofree  http://${dhcp-server}/cell/<%= cell %>/boot<%= parmstr.empty? ? "" : "?#{parmstr}" %>
-  <% end %>
-<% end %>
+  
+    
+    
+:ubuntu-automatic
+chain --replace --autofree  http://${dhcp-server}/cell/ubuntu/boot?entry=automatic&raid=raid1&dhcp-server=172.16.2.4?&mac=0c:c4:7a:05:77:1a&serial=S15500224715585&product=SYS-2027PR-HTTR&manufacturer=Supermicro&board-serial=ZM143S050147&board-product=X9DRT-PT&ip=unknown&sku=SPM-ZM143S050147
+  
+    
+    
+:ubuntu-manual
+chain --replace --autofree  http://${dhcp-server}/cell/ubuntu/boot?entry=manual&manual=true&dhcp-server=172.16.2.4?&mac=0c:c4:7a:05:77:1a&serial=S15500224715585&product=SYS-2027PR-HTTR&manufacturer=Supermicro&board-serial=ZM143S050147&board-product=X9DRT-PT&ip=unknown&sku=SPM-ZM143S050147
+  
 
 ##########################################
 

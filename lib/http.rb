@@ -14,8 +14,9 @@ class ZygoteWeb < Genesis::Http::Handler
   end
 
   get '/chain' do
-    cleaned = clean_params(params.to_h)
     ip = request.ip == "127.0.0.1" ? @env['HTTP_X_FORWARDED_FOR'] : request.ip
+    ip = 'unknown' if ENV['TRAVIS'] || ip.nil? || ip.empty?
+    cleaned = clean_params(params.to_h)
     cleaned['ip'] = ip
     cleaned['sku'] = compute_sku(cleaned['manufacturer'], cleaned['serial'], cleaned['board-serial'])
     @channel << cleaned
@@ -25,14 +26,14 @@ class ZygoteWeb < Genesis::Http::Handler
   get %r{/cell/(?<cell>\w*)/(?<action>\w*)} do
     cleaned = clean_params(params.to_h)
     cell = cleaned['cell']
-    cell_opts = CELL_CONFIG['index']['cells'][cell]
+    cell_opts = CELL_CONFIG['index']['cells'][cell] || {}
     opts = cell_opts.merge('params' => cleaned || {})
     @channel << opts # for debugging
     body {erb :"#{cell}/#{cleaned['action']}".to_sym, locals: { opts: opts } }
   end
 
   subscribe do |args|
-    puts args
+    puts args if ENV['DEBUG']
   end
 end
 
@@ -45,6 +46,5 @@ def zygote
     handlers: [ ZygoteWeb ],
     views: [ File.join(Dir.pwd, 'views'), File.join(Dir.pwd, 'cells') ],
   )
-  puts "Zygote spawned"
   zygote
 end

@@ -25,5 +25,5 @@ end
 
 def clean_params(params)
   params.delete_if { |x,_| x == 'splat' || x == 'captures' }
-  params 
+  params
 end

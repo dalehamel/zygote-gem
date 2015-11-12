@@ -2,4 +2,4 @@ language: ruby
 rvm:
   - 2.1.5
 env:
-  - RACK_ENV=development
+  - RACK_ENV=development TRAVIS=true

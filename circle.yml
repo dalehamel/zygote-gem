@@ -1,9 +1,0 @@
-machine:
-  environment:
-    RACK_ENV: development
-  ruby:
-    version:
-      2.1.5
-test:
-  override:
-    - "bundle exec rake spec"

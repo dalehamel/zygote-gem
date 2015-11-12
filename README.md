@@ -24,3 +24,11 @@ You can arbitrarily render additional templates if you need to by hitting the /c
 Zygote is powered by the GenesisReactor, which is an event machine driven framework.
 
 But, you probably don't have to care about that. You just need to know asynchronous actions are available to you.
+
+# Testing
+
+Tested automatically using [travis ci](https://travis-ci.org/dalehamel/zygote).
+
+Most tests are fixture based, as the app primarily renders templates.
+
+To regenerate fixtures, set FIXTURE\_RECORD=true before running test.

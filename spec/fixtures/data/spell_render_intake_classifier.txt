@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# g1.hadoop ( F617H6-FTPTL+ )
+# g2.small ( 5037MC-H8TRF )
+# g3.standard ( SYS-2027TR-H72RF+, SYS-2027TR-HTRF+ with 96GB )
+# g3.large ( SYS-2027TR-HTRF+ with >96GB )
+# g3.dbalt ( SSG-2027R-AR24 )
+# g3.storage ( SYS-2027R-WRF )
+# g4.standard ( SYS-2027PR-HTTR )
+
+
+CHASSIS_PRODUCT=`dmidecode -s system-product-name`
+TOTAL_MEM=`grep MemTotal /proc/meminfo`
+TYPE=""
+
+case $CHASSIS_PRODUCT in
+  "F617H6-FTPTL+") TYPE="G1.hadoop" ;;
+  "5037MC-H8TRF") TYPE="G2.small" ;;
+  "SYS-2027TR-H72RF+") 
+    if [ "$TOTAL_MEM" -gt 98973904 ]
+    then
+	    TYPE = "G3.large"
+    else
+    	TYPE = "G3.standard"
+    fi ;;
+	"SSG-2027R-AR24") TYPE="G3.dbalt" ;;
+  "SYS-2027R-WRF") TYPE="G3.storage" ;;
+  "SYS-2027PR-HTTR") TYPE="G4.standard" ;;
+  *) echo "no-type-available, $CHASSIS_PRODUCT";;
+esac
+
+echo $TYPE
+
+
+
+

@@ -1,3 +1,5 @@
+![ci-status](https://travis-ci.org/dalehamel/zygote.svg)
+
 # Zygote
 
 Zygote is a PXE automation framework that allows you to easily generate an iPXE boot menus.

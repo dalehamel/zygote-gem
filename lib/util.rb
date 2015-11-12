@@ -24,7 +24,6 @@ def compute_sku( vendor, serial, board_serial )
 end
 
 def clean_params(params)
-  cleaned = params.clone
-  cleaned.delete_if { |x,_| x == 'splat' || x == 'captures' }
-  cleaned
+  params.delete_if { |x,_| x == 'splat' || x == 'captures' }
+  params 
 end

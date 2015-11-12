@@ -12,26 +12,25 @@ class ZygoteWeb < Http::Handler
   # This enables us to customize what details we want iPXE to send us
   # The iPXE undionly.kpxe should contain an embedded script to call this URL
   get '/' do
-    params = clean_params(params || {})
-    ip = request.ip == "127.0.0.1" ? @env['HTTP_X_FORWARDED_FOR'] : request.ip
-    params['ip'] = ip
-    params['sku'] = compute_sku(params['manufacturer'], params['serial'], params['board-serial'])
-    @channel << params
     body {erb :boot }
   end
 
   get '/chain' do
-    params = clean_params(params || {})
-    body {erb :menu, locals: { opts: CELL_CONFIG.merge('params' => params || {}) } }
+    cleaned = clean_params(params.to_h)
+    ip = request.ip == "127.0.0.1" ? @env['HTTP_X_FORWARDED_FOR'] : request.ip
+    cleaned['ip'] = ip
+    cleaned['sku'] = compute_sku(cleaned['manufacturer'], cleaned['serial'], cleaned['board-serial'])
+    @channel << cleaned
+    body {erb :menu, locals: { opts: CELL_CONFIG.merge('params' => cleaned || {}) } }
   end
 
   get %r{/cell/(?<cell>\w*)/(?<action>\w*)} do
-    cell = params['cell']
+    cleaned = clean_params(params.to_h)
+    cell = cleaned['cell']
     cell_opts = CELL_CONFIG['index']['cells'][cell]
-    params = clean_params(params)
-    opts = cell_opts.merge('params' => params || {})
+    opts = cell_opts.merge('params' => cleaned || {})
     @channel << opts # for debugging
-    body {erb :"#{cell}/#{params['action']}".to_sym, locals: { opts: opts } }
+    body {erb :"#{cell}/#{cleaned['action']}".to_sym, locals: { opts: opts } }
   end
 
   subscribe do |args|

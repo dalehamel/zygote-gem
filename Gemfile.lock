@@ -25,6 +25,7 @@ GEM
     cookiejar (0.3.2)
     daemons (1.2.3)
     diff-lcs (1.2.5)
+    docile (1.1.5)
     ejson (1.0.1)
     em-http-request (1.1.2)
       addressable (>= 2.3.4)
@@ -44,6 +45,7 @@ GEM
       thin (= 1.6.3)
     http_parser.rb (0.6.0)
     i18n (0.7.0)
+    json (1.8.3)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
     net-ssh (3.0.1)
@@ -64,6 +66,11 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.3.0)
     rspec-support (3.3.0)
+    simplecov (0.10.0)
+      docile (~> 1.1.0)
+      json (~> 1.8)
+      simplecov-html (~> 0.10.0)
+    simplecov-html (0.10.0)
     sinatra (1.4.6)
       rack (~> 1.4)
       rack-protection (~> 1.4)
@@ -89,6 +96,7 @@ DEPENDENCIES
   em-http-request
   genesisreactor (~> 0.0.2)
   rspec
+  simplecov
 
 BUNDLED WITH
    1.10.6

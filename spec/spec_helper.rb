@@ -1,10 +1,15 @@
 require 'net/http'
 require 'socket'
-require 'rspec'
 require 'yaml'
+
+require 'rspec'
 require 'em-synchrony'
 require 'em-synchrony/em-http'
+require 'simplecov'
+
 require File.expand_path('../../lib/http.rb', __FILE__)
+
+SimpleCov.start
 
 MOC_PARAMS = YAML.load(File.read(File.expand_path('../../spec/fixtures/params.yml', __FILE__)))
 module SynchronySpec

@@ -13,4 +13,5 @@ end
 group :development, :test do
   gem "rspec"
   gem "em-http-request"
+  gem 'simplecov'
 end

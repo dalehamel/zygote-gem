@@ -58,6 +58,12 @@ menu Select preseeds for ubuntu installer...
   
 item  ubuntu-automatic Automatic, default(raid1)
   
+item  ubuntu-automatic-raid5 Automatic, raid5 (6 disks)
+  
+item  ubuntu-automatic-single-sda Automatic, single disk - sda
+  
+item  ubuntu-automatic-single-sdb Automatic, single disk - sdb
+  
 item  ubuntu-manual Manual install
   
 
@@ -74,6 +80,21 @@ goto ${selected}
     
 :ubuntu-automatic
 chain --replace --autofree  http://${dhcp-server}/cell/ubuntu/boot?entry=automatic&raid=raid1&dhcp-server=172.16.2.4?&mac=0c:c4:7a:05:77:1a&serial=S15500224715585&product=SYS-2027PR-HTTR&manufacturer=Supermicro&board-serial=ZM143S050147&board-product=X9DRT-PT&ip=unknown&sku=SPM-ZM143S050147
+  
+    
+    
+:ubuntu-automatic-raid5
+chain --replace --autofree  http://${dhcp-server}/cell/ubuntu/boot?entry=automatic-raid5&raid=raid5&dhcp-server=172.16.2.4?&mac=0c:c4:7a:05:77:1a&serial=S15500224715585&product=SYS-2027PR-HTTR&manufacturer=Supermicro&board-serial=ZM143S050147&board-product=X9DRT-PT&ip=unknown&sku=SPM-ZM143S050147
+  
+    
+    
+:ubuntu-automatic-single-sda
+chain --replace --autofree  http://${dhcp-server}/cell/ubuntu/boot?entry=automatic-single-sda&raid=single&root_disk=sda&dhcp-server=172.16.2.4?&mac=0c:c4:7a:05:77:1a&serial=S15500224715585&product=SYS-2027PR-HTTR&manufacturer=Supermicro&board-serial=ZM143S050147&board-product=X9DRT-PT&ip=unknown&sku=SPM-ZM143S050147
+  
+    
+    
+:ubuntu-automatic-single-sdb
+chain --replace --autofree  http://${dhcp-server}/cell/ubuntu/boot?entry=automatic-single-sdb&raid=single&root_disk=sdb&dhcp-server=172.16.2.4?&mac=0c:c4:7a:05:77:1a&serial=S15500224715585&product=SYS-2027PR-HTTR&manufacturer=Supermicro&board-serial=ZM143S050147&board-product=X9DRT-PT&ip=unknown&sku=SPM-ZM143S050147
   
     
     

@@ -12,6 +12,26 @@ index:
               raid: raid1
             args:
               kernel_params: console=tty0 console=ttyS1,115200n8 DEBCONF_DEBUG=5
+          automatic-raid5:
+            label: "Automatic, raid5 (6 disks)"
+            params:
+              raid: raid5
+            args:
+              kernel_params: console=tty0 console=ttyS1,115200n8 DEBCONF_DEBUG=5
+          automatic-single-sda:
+            label: "Automatic, single disk - sda"
+            params:
+              raid: single
+              root_disk: sda
+            args:
+              kernel_params: console=tty0 console=ttyS1,115200n8 DEBCONF_DEBUG=5
+          automatic-single-sdb:
+            label: "Automatic, single disk - sdb"
+            params:
+              raid: single
+              root_disk: sdb
+            args:
+              kernel_params: console=tty0 console=ttyS1,115200n8 DEBCONF_DEBUG=5
           manual:
             label: "Manual install"
             params:

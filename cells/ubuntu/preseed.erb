@@ -62,8 +62,8 @@ d-i partman/early_command string \
   for root in $(vgdisplay | grep "VG Name" | tr -s " " : | cut -d : -f 4); do vgremove -f $root; done; \
   for device in $(pvdisplay | grep "PV Name" | tr -s " " : | cut -d : -f 4); do pvremove -f -f -y $device; done;
 
-<% if params['raid'] == 'hwraid' %>
-d-i partman-auto/disk string /dev/sda
+<% if params['raid'] == 'single' %>
+d-i partman-auto/disk string /dev/<%= params['root_disk'] %>
 d-i partman-auto/method string lvm
 d-i partman-lvm/device_remove_lvm boolean true
 d-i partman-md/device_remove_md                   boolean true
@@ -100,6 +100,7 @@ d-i partman-lvm/confirm boolean true
 d-i partman-lvm/confirm_nooverwrite boolean true
 d-i partman/confirm boolean true
 d-i partman/confirm_nooverwrite boolean true
+d-i grub-installer/bootdev string /dev/<%= params['root_disk'] %>
 <% elsif params['raid'] == 'raid5' %>
 d-i     partman-auto/disk string /dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
 d-i     partman-auto/method                           string raid
